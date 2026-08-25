@@ -47,6 +47,19 @@ const now = new Date();
 const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
 
 function RnpPage() {
+  const navigate = useNavigate();
+  const { user, session, loading, signOut } = useAuth();
+
+  // Session tugasa (masalan boshqa tabda chiqilsa) — login sahifasiga qaytarish
+  useEffect(() => {
+    if (!loading && !session) navigate({ to: "/login", replace: true });
+  }, [loading, session, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/login", replace: true });
+  };
+
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [data, setData] = useState<MonthData>(() => createMonthData(year, month));
