@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { DailyTable } from "@/components/marketboard/DailyTable";
 import { PlanPanel } from "@/components/marketboard/PlanPanel";
 import { RnpCharts } from "@/components/marketboard/RnpCharts";
