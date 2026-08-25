@@ -46,12 +46,15 @@ function Index() {
         <span className="font-display text-lg font-bold tracking-tight">
           Market<span className="text-primary">Board</span>
         </span>
-        <a
-          href="#shablonlar"
-          className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
-        >
-          Shablonlar
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="#shablonlar"
+            className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
+          >
+            Shablonlar
+          </a>
+          <AuthNavButton />
+        </div>
       </header>
 
       <section className="hero-glow">
