@@ -158,27 +158,52 @@ export function totals(data: MonthData): Totals {
 
 /* ---------- storage ---------- */
 
-const key = (year: number, month: number) =>
+const legacyKey = (year: number, month: number) =>
   `marketboard:rnp:${year}-${String(month + 1).padStart(2, "0")}`;
 
-export function loadMonth(year: number, month: number): MonthData {
+const key = (year: number, month: number, userId?: string) =>
+  userId
+    ? `marketboard:rnp:${userId}:${year}-${String(month + 1).padStart(2, "0")}`
+    : legacyKey(year, month);
+
+export function normalizeMonthData(year: number, month: number, value: unknown): MonthData {
+  const base = createMonthData(year, month);
+  if (!value || typeof value !== "object") return base;
+
+  const parsed = value as Partial<MonthData>;
+  const parsedPlan =
+    parsed.plan && typeof parsed.plan === "object" ? (parsed.plan as Partial<PlanSettings>) : {};
+  const days = Array.isArray(parsed.days) ? parsed.days : [];
+  const byDay = new Map<number, Partial<DayRow>>();
+
+  for (const row of days) {
+    if (!row || typeof row !== "object") continue;
+    const candidate = row as Partial<DayRow>;
+    if (typeof candidate.day === "number") byDay.set(candidate.day, candidate);
+  }
+
+  return {
+    plan: { ...defaultPlan, ...parsedPlan },
+    days: base.days.map((row) => ({ ...row, ...(byDay.get(row.day) ?? {}) })),
+  };
+}
+
+export function loadMonth(year: number, month: number, userId?: string): MonthData {
   if (typeof window === "undefined") return createMonthData(year, month);
   try {
-    const raw = window.localStorage.getItem(key(year, month));
+    const raw =
+      window.localStorage.getItem(key(year, month, userId)) ??
+      (userId ? window.localStorage.getItem(legacyKey(year, month)) : null);
     if (!raw) return createMonthData(year, month);
-    const parsed = JSON.parse(raw) as MonthData;
-    const base = createMonthData(year, month, { ...defaultPlan, ...parsed.plan });
-    const byDay = new Map((parsed.days ?? []).map((d) => [d.day, d]));
-    base.days = base.days.map((d) => ({ ...d, ...(byDay.get(d.day) ?? {}) }));
-    return base;
+    return normalizeMonthData(year, month, JSON.parse(raw));
   } catch {
     return createMonthData(year, month);
   }
 }
 
-export function saveMonth(year: number, month: number, data: MonthData) {
+export function saveMonth(year: number, month: number, data: MonthData, userId?: string) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(key(year, month), JSON.stringify(data));
+  window.localStorage.setItem(key(year, month, userId), JSON.stringify(data));
 }
 
 export const monthNames = [

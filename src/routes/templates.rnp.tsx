@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { loadRnpMonth, saveRnpMonth } from "@/lib/rnp-storage";
 import { DailyTable } from "@/components/marketboard/DailyTable";
 import { PlanPanel } from "@/components/marketboard/PlanPanel";
 import { RnpCharts } from "@/components/marketboard/RnpCharts";
@@ -13,6 +14,7 @@ import {
   fmt,
   loadMonth,
   monthNames,
+  normalizeMonthData,
   planFunnel,
   saveMonth,
   totals,
@@ -69,17 +71,72 @@ function RnpPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [data, setData] = useState<MonthData>(() => createMonthData(year, month));
-  const [ready, setReady] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
+  const [syncState, setSyncState] = useState<"loading" | "ready" | "saving" | "saved" | "error">(
+    "loading",
+  );
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const userId = user?.id;
 
   useEffect(() => {
-    setReady(false);
-    setData(loadMonth(year, month));
-    setReady(true);
-  }, [year, month]);
+    let active = true;
+    setDataReady(false);
+    setSyncState("loading");
+    setSyncError(null);
+
+    const localData = loadMonth(year, month, userId);
+    setData(localData);
+
+    if (!userId)
+      return () => {
+        active = false;
+      };
+
+    void loadRnpMonth(userId, year, month)
+      .then((remoteData) => {
+        if (!active) return;
+        if (remoteData) setData(normalizeMonthData(year, month, remoteData));
+        setDataReady(true);
+        setSyncState("ready");
+      })
+      .catch(() => {
+        if (!active) return;
+        setSyncError("Bulutdagi ma'lumotni yuklab bo'lmadi. Mahalliy nusxa ko'rsatilmoqda.");
+        setSyncState("error");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [month, userId, year]);
 
   useEffect(() => {
-    if (ready) saveMonth(year, month, data);
-  }, [ready, year, month, data]);
+    if (!dataReady || !userId) return;
+
+    let active = true;
+    const timer = window.setTimeout(() => {
+      setSyncState("saving");
+      saveMonth(year, month, data, userId);
+      void saveRnpMonth(userId, year, month, data)
+        .then(() => {
+          if (active) {
+            setSyncError(null);
+            setSyncState("saved");
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setSyncError("Bulutga saqlashda xatolik. Ma'lumot brauzerda ham saqlandi.");
+            setSyncState("error");
+          }
+        });
+    }, 700);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [data, dataReady, month, userId, year]);
 
   const onChangeRow = useCallback((day: number, key: keyof DayRow, value: number) => {
     setData((prev) => ({
@@ -106,9 +163,7 @@ function RnpPage() {
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Shablonlar
             </Link>
-            <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl">
-              RNP Funnel Tracker
-            </h1>
+            <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl">RNP Funnel Tracker</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Meta Ads lead funnelini kunlik plan/fakt bo'yicha kuzatish
             </p>
@@ -124,6 +179,18 @@ function RnpPage() {
             >
               <LogOut className="h-3.5 w-3.5" /> Chiqish
             </button>
+            <span
+              className={`text-xs ${syncState === "error" ? "text-destructive" : "text-muted-foreground"}`}
+              title={syncError ?? undefined}
+            >
+              {syncState === "loading"
+                ? "Yuklanmoqda…"
+                : syncState === "saving"
+                  ? "Saqlanmoqda…"
+                  : syncState === "error"
+                    ? "Sinxronlash xatosi"
+                    : "Bulutga saqlandi"}
+            </span>
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
@@ -152,7 +219,11 @@ function RnpPage() {
         <PlanPanel plan={data.plan} onChange={onChangePlan} />
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <StatCard label="Sarflangan budjet" value={`$${fmt(t.budget)}`} hint={`reja $${fmt(data.plan.budget)}`} />
+          <StatCard
+            label="Sarflangan budjet"
+            value={`$${fmt(t.budget)}`}
+            hint={`reja $${fmt(data.plan.budget)}`}
+          />
           <StatCard
             label="Leadlar"
             value={`${fmt(t.lead)} / ${fmt(pf.lead)}`}
