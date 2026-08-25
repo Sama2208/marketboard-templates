@@ -5,8 +5,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * Faqat publishable/anon public key ishlatiladi — secret key hech qachon bu yerda bo'lmaydi.
  * Qiymatlar environment variable'lardan olinadi (hardcode qilinmagan).
  */
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+const supabaseUrl = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
+const supabasePublishableKey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as
+  | string
+  | undefined;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
 
