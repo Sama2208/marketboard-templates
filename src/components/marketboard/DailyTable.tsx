@@ -12,8 +12,14 @@ const inputCols: { key: keyof DayRow; label: string }[] = [
   { key: "yotdi", label: "Yotdi" },
 ];
 
-function IndexCell({ value }: { value: number }) {
+function IndexCell({ value, empty }: { value: number; empty?: boolean }) {
   const tone = indexTone(value);
+  if (empty)
+    return (
+      <td className="cell-auto border border-border px-2 py-1.5 text-right text-muted-foreground">
+        —
+      </td>
+    );
   return (
     <td className="cell-auto border border-border px-2 py-1.5 text-right tabular-nums">
       <span
@@ -100,14 +106,14 @@ export function DailyTable({
                   <td className="cell-auto border border-border px-2 py-1.5 text-right tabular-nums">
                     {fmt(c.leadPlan, 1)}
                   </td>
-                  <IndexCell value={c.leadIndex} />
+                  <IndexCell value={c.leadIndex} empty={row.lead === 0} />
                   <td className="cell-auto border border-border px-2 py-1.5 text-right tabular-nums">
                     {fmt(c.cpl, 2)}
                   </td>
                   <td className="cell-auto border border-border px-2 py-1.5 text-right tabular-nums">
                     {fmt(c.qlTotal)}
                   </td>
-                  <IndexCell value={c.qlIndex} />
+                  <IndexCell value={c.qlIndex} empty={c.qlTotal === 0} />
                   <td className="cell-auto border border-border px-2 py-1.5 text-right tabular-nums">
                     {fmt(c.cpql, 2)}
                   </td>
