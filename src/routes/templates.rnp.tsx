@@ -19,6 +19,12 @@ import {
 } from "@/lib/rnp";
 
 export const Route = createFileRoute("/templates/rnp")({
+  // Session localStorage'da saqlanadi — shu sababli gate faqat brauzerda ishlaydi.
+  ssr: false,
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/login" });
+  },
   head: () => ({
     meta: [
       { title: "RNP Funnel Tracker — MarketBoard" },
