@@ -107,7 +107,17 @@ function RnpPage() {
               Meta Ads lead funnelini kunlik plan/fakt bo'yicha kuzatish
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {user?.email ? (
+              <span className="hidden text-xs text-muted-foreground sm:inline">{user.email}</span>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Chiqish
+            </button>
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
