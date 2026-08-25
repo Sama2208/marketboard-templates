@@ -80,10 +80,13 @@ function RnpPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initRef = useRef(false);
 
-  // Mijozlarni yuklash (bo'sh bo'lsa — birinchisini avtomatik yaratish)
+  // Mijozlarni yuklash (bo'sh bo'lsa — birinchisini avtomatik yaratish).
+  // initRef — StrictMode/ikki marta mount holatida dublikat mijoz yaratilishining oldini oladi.
   useEffect(() => {
-    let active = true;
+    if (initRef.current) return;
+    initRef.current = true;
     (async () => {
       try {
         let list = await listClients();
@@ -91,18 +94,14 @@ function RnpPage() {
           const c = await addClient("Asosiy mijoz");
           list = [c];
         }
-        if (!active) return;
         setClients(list);
         setClientId((prev) => prev ?? list[0]?.id ?? null);
       } catch (e) {
         console.error("Mijozlarni yuklashda xatolik", e);
       } finally {
-        if (active) setClientsReady(true);
+        setClientsReady(true);
       }
     })();
-    return () => {
-      active = false;
-    };
   }, []);
 
   // Tanlangan mijoz + oy uchun ma'lumotni bazadan yuklash
