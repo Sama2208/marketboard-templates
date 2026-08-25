@@ -1,6 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BarChart3, Layers, Sparkles } from "lucide-react";
 import { TemplateGallery } from "@/components/marketboard/TemplateGallery";
+import { useAuth } from "@/hooks/use-auth";
+
+function AuthNavButton() {
+  const { session, loading } = useAuth();
+  if (loading) {
+    return <span className="h-9 w-24 rounded-lg border border-border bg-secondary/40" />;
+  }
+  return session ? (
+    <Link
+      to="/templates/rnp"
+      className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
+    >
+      Ish stoli
+    </Link>
+  ) : (
+    <Link
+      to="/login"
+      className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
+    >
+      Kirish
+    </Link>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,12 +69,15 @@ function Index() {
         <span className="font-display text-lg font-bold tracking-tight">
           Market<span className="text-primary">Board</span>
         </span>
-        <a
-          href="#shablonlar"
-          className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
-        >
-          Shablonlar
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="#shablonlar"
+            className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
+          >
+            Shablonlar
+          </a>
+          <AuthNavButton />
+        </div>
       </header>
 
       <section className="hero-glow">

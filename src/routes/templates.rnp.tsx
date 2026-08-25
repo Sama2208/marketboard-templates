@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { DailyTable } from "@/components/marketboard/DailyTable";
 import { PlanPanel } from "@/components/marketboard/PlanPanel";
 import { RnpCharts } from "@/components/marketboard/RnpCharts";
@@ -17,6 +19,18 @@ import {
 } from "@/lib/rnp";
 
 export const Route = createFileRoute("/templates/rnp")({
+  // Session localStorage'da saqlanadi — shu sababli gate faqat brauzerda ishlaydi.
+  ssr: false,
+  beforeLoad: async () => {
+    let hasSession = false;
+    try {
+      const { data } = await supabase.auth.getSession();
+      hasSession = Boolean(data.session);
+    } catch {
+      hasSession = false;
+    }
+    if (!hasSession) throw redirect({ to: "/login" });
+  },
   head: () => ({
     meta: [
       { title: "RNP Funnel Tracker — MarketBoard" },
@@ -39,6 +53,19 @@ const now = new Date();
 const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
 
 function RnpPage() {
+  const navigate = useNavigate();
+  const { user, session, loading, signOut } = useAuth();
+
+  // Session tugasa (masalan boshqa tabda chiqilsa) — login sahifasiga qaytarish
+  useEffect(() => {
+    if (!loading && !session) navigate({ to: "/login", replace: true });
+  }, [loading, session, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/login", replace: true });
+  };
+
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [data, setData] = useState<MonthData>(() => createMonthData(year, month));
@@ -86,7 +113,17 @@ function RnpPage() {
               Meta Ads lead funnelini kunlik plan/fakt bo'yicha kuzatish
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {user?.email ? (
+              <span className="hidden text-xs text-muted-foreground sm:inline">{user.email}</span>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Chiqish
+            </button>
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
