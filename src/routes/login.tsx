@@ -184,6 +184,10 @@ function translateError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
   const m = msg.toLowerCase();
   if (m.includes("invalid login credentials")) return "Email yoki parol xato.";
+  if (m.includes("is invalid") || m.includes("invalid email") || m.includes("email address"))
+    return "Email manzil noto'g'ri yoki qabul qilinmaydi. Boshqa email kiriting.";
+  if (m.includes("signups not allowed") || m.includes("signup is disabled"))
+    return "Ro'yxatdan o'tish vaqtincha o'chirilgan. Administrator bilan bog'laning.";
   if (m.includes("email not confirmed"))
     return "Email hali tasdiqlanmagan. Pochtangizdagi tasdiqlash havolasini bosing.";
   if (m.includes("user already registered") || m.includes("already been registered"))
