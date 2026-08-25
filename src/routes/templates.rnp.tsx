@@ -22,8 +22,14 @@ export const Route = createFileRoute("/templates/rnp")({
   // Session localStorage'da saqlanadi — shu sababli gate faqat brauzerda ishlaydi.
   ssr: false,
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login" });
+    let hasSession = false;
+    try {
+      const { data } = await supabase.auth.getSession();
+      hasSession = Boolean(data.session);
+    } catch {
+      hasSession = false;
+    }
+    if (!hasSession) throw redirect({ to: "/login" });
   },
   head: () => ({
     meta: [
