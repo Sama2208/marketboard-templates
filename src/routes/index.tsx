@@ -1,6 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BarChart3, Layers, Sparkles } from "lucide-react";
 import { TemplateGallery } from "@/components/marketboard/TemplateGallery";
+import { useAuth } from "@/hooks/use-auth";
+
+function AuthNavButton() {
+  const { session, loading } = useAuth();
+  if (loading) {
+    return <span className="h-9 w-24 rounded-lg border border-border bg-secondary/40" />;
+  }
+  return session ? (
+    <Link
+      to="/templates/rnp"
+      className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
+    >
+      Ish stoli
+    </Link>
+  ) : (
+    <Link
+      to="/login"
+      className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
+    >
+      Kirish
+    </Link>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
