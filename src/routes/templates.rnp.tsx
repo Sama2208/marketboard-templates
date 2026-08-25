@@ -1,27 +1,25 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, Loader2, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { loadRnpMonth, saveRnpMonth } from "@/lib/rnp-storage";
+import {
+  addClient,
+  deleteClient,
+  listClients,
+  renameClient,
+  type Client,
+} from "@/lib/supabase/clients";
+import { loadMonthRemote, saveMonthRemote } from "@/lib/supabase/rnpStore";
+import { ClientBar } from "@/components/marketboard/ClientBar";
 import { DailyTable } from "@/components/marketboard/DailyTable";
 import { PlanPanel } from "@/components/marketboard/PlanPanel";
 import { RnpCharts } from "@/components/marketboard/RnpCharts";
 import { StatCard } from "@/components/marketboard/StatCard";
 import type { DayRow, MonthData, PlanSettings } from "@/lib/rnp";
-import {
-  createMonthData,
-  fmt,
-  loadMonth,
-  monthNames,
-  normalizeMonthData,
-  planFunnel,
-  saveMonth,
-  totals,
-} from "@/lib/rnp";
+import { createMonthData, fmt, monthNames, planFunnel, totals } from "@/lib/rnp";
 
 export const Route = createFileRoute("/templates/rnp")({
-  // Session localStorage'da saqlanadi — shu sababli gate faqat brauzerda ishlaydi.
   ssr: false,
   beforeLoad: async () => {
     let hasSession = false;
@@ -58,7 +56,6 @@ function RnpPage() {
   const navigate = useNavigate();
   const { user, session, loading, signOut } = useAuth();
 
-  // Session tugasa (masalan boshqa tabda chiqilsa) — login sahifasiga qaytarish
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login", replace: true });
   }, [loading, session, navigate]);
@@ -68,89 +65,176 @@ function RnpPage() {
     navigate({ to: "/login", replace: true });
   };
 
+  // Mijozlar
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [clientsReady, setClientsReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // Sana
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
+
+  // Ma'lumot
   const [data, setData] = useState<MonthData>(() => createMonthData(year, month));
-  const [dataReady, setDataReady] = useState(false);
-  const [syncState, setSyncState] = useState<"loading" | "ready" | "saving" | "saved" | "error">(
-    "loading",
+  const [loadingData, setLoadingData] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Mijozlarni yuklash (bo'sh bo'lsa — birinchisini avtomatik yaratish)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        let list = await listClients();
+        if (list.length === 0) {
+          const c = await addClient("Asosiy mijoz");
+          list = [c];
+        }
+        if (!active) return;
+        setClients(list);
+        setClientId((prev) => prev ?? list[0]?.id ?? null);
+      } catch (e) {
+        console.error("Mijozlarni yuklashda xatolik", e);
+      } finally {
+        if (active) setClientsReady(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Tanlangan mijoz + oy uchun ma'lumotni bazadan yuklash
+  useEffect(() => {
+    if (!clientId) return;
+    let active = true;
+    setLoadingData(true);
+    (async () => {
+      try {
+        const remote = await loadMonthRemote(clientId, year, month);
+        if (!active) return;
+        setData(remote ?? createMonthData(year, month));
+      } catch (e) {
+        console.error("Ma'lumot yuklashda xatolik", e);
+        if (active) setData(createMonthData(year, month));
+      } finally {
+        if (active) setLoadingData(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [clientId, year, month]);
+
+  // Debounce bilan bazaga saqlash (faqat foydalanuvchi tahrirlaganda chaqiriladi)
+  const scheduleSave = useCallback(
+    (next: MonthData) => {
+      if (!clientId) return;
+      const cid = clientId;
+      const y = year;
+      const m = month;
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      setSaving(true);
+      saveTimer.current = setTimeout(async () => {
+        try {
+          await saveMonthRemote(cid, y, m, next);
+        } catch (e) {
+          console.error("Saqlashda xatolik", e);
+        } finally {
+          setSaving(false);
+        }
+      }, 700);
+    },
+    [clientId, year, month],
   );
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const userId = user?.id;
 
-  useEffect(() => {
-    let active = true;
-    setDataReady(false);
-    setSyncState("loading");
-    setSyncError(null);
-
-    const localData = loadMonth(year, month, userId);
-    setData(localData);
-
-    if (!userId)
-      return () => {
-        active = false;
-      };
-
-    void loadRnpMonth(userId, year, month)
-      .then((remoteData) => {
-        if (!active) return;
-        if (remoteData) setData(normalizeMonthData(year, month, remoteData));
-        setDataReady(true);
-        setSyncState("ready");
-      })
-      .catch(() => {
-        if (!active) return;
-        setSyncError("Bulutdagi ma'lumotni yuklab bo'lmadi. Mahalliy nusxa ko'rsatilmoqda.");
-        setSyncState("error");
+  const onChangeRow = useCallback(
+    (day: number, key: keyof DayRow, value: number) => {
+      setData((prev) => {
+        const next = {
+          ...prev,
+          days: prev.days.map((r) => (r.day === day ? { ...r, [key]: value } : r)),
+        };
+        scheduleSave(next);
+        return next;
       });
+    },
+    [scheduleSave],
+  );
 
-    return () => {
-      active = false;
-    };
-  }, [month, userId, year]);
+  const onChangePlan = useCallback(
+    (plan: PlanSettings) => {
+      setData((prev) => {
+        const next = { ...prev, plan };
+        scheduleSave(next);
+        return next;
+      });
+    },
+    [scheduleSave],
+  );
 
-  useEffect(() => {
-    if (!dataReady || !userId) return;
+  // Mijoz amallari
+  const onAddClient = async () => {
+    const name = window.prompt("Yangi mijoz nomi:", "");
+    if (name === null) return;
+    setBusy(true);
+    try {
+      const c = await addClient(name);
+      setClients((prev) => [...prev, c]);
+      setClientId(c.id);
+    } catch (e) {
+      console.error(e);
+      window.alert("Mijoz qo'shilmadi. Qayta urinib ko'ring.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
-    let active = true;
-    const timer = window.setTimeout(() => {
-      setSyncState("saving");
-      saveMonth(year, month, data, userId);
-      void saveRnpMonth(userId, year, month, data)
-        .then(() => {
-          if (active) {
-            setSyncError(null);
-            setSyncState("saved");
-          }
-        })
-        .catch(() => {
-          if (active) {
-            setSyncError("Bulutga saqlashda xatolik. Ma'lumot brauzerda ham saqlandi.");
-            setSyncState("error");
-          }
-        });
-    }, 700);
+  const onRenameClient = async () => {
+    if (!clientId) return;
+    const cur = clients.find((c) => c.id === clientId);
+    const name = window.prompt("Yangi nom:", cur?.name ?? "");
+    if (name === null) return;
+    setBusy(true);
+    try {
+      await renameClient(clientId, name);
+      setClients((prev) =>
+        prev.map((c) => (c.id === clientId ? { ...c, name: name.trim() || c.name } : c)),
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
 
-    return () => {
-      active = false;
-      window.clearTimeout(timer);
-    };
-  }, [data, dataReady, month, userId, year]);
-
-  const onChangeRow = useCallback((day: number, key: keyof DayRow, value: number) => {
-    setData((prev) => ({
-      ...prev,
-      days: prev.days.map((r) => (r.day === day ? { ...r, [key]: value } : r)),
-    }));
-  }, []);
-
-  const onChangePlan = useCallback((plan: PlanSettings) => {
-    setData((prev) => ({ ...prev, plan }));
-  }, []);
+  const onDeleteClient = async () => {
+    if (!clientId) return;
+    const cur = clients.find((c) => c.id === clientId);
+    if (
+      !window.confirm(
+        `"${cur?.name ?? "mijoz"}" mijozini va uning barcha RNP ma'lumotini o'chirasizmi?`,
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await deleteClient(clientId);
+      const rest = clients.filter((c) => c.id !== clientId);
+      setClients(rest);
+      setClientId(rest[0]?.id ?? null);
+      if (rest.length === 0) setData(createMonthData(year, month));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const t = totals(data);
   const pf = planFunnel(data.plan);
+  const showLoader = !clientsReady;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -169,6 +253,13 @@ function RnpPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {saving ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saqlanmoqda…
+              </span>
+            ) : (
+              <span className="text-xs text-success">Saqlandi</span>
+            )}
             {user?.email ? (
               <span className="hidden text-xs text-muted-foreground sm:inline">{user.email}</span>
             ) : null}
@@ -179,18 +270,6 @@ function RnpPage() {
             >
               <LogOut className="h-3.5 w-3.5" /> Chiqish
             </button>
-            <span
-              className={`text-xs ${syncState === "error" ? "text-destructive" : "text-muted-foreground"}`}
-              title={syncError ?? undefined}
-            >
-              {syncState === "loading"
-                ? "Yuklanmoqda…"
-                : syncState === "saving"
-                  ? "Saqlanmoqda…"
-                  : syncState === "error"
-                    ? "Sinxronlash xatosi"
-                    : "Bulutga saqlandi"}
-            </span>
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
@@ -216,39 +295,66 @@ function RnpPage() {
           </div>
         </div>
 
-        <PlanPanel plan={data.plan} onChange={onChangePlan} />
+        <ClientBar
+          clients={clients}
+          selectedId={clientId}
+          onSelect={setClientId}
+          onAdd={onAddClient}
+          onRename={onRenameClient}
+          onDelete={onDeleteClient}
+          busy={busy}
+        />
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <StatCard
-            label="Sarflangan budjet"
-            value={`$${fmt(t.budget)}`}
-            hint={`reja $${fmt(data.plan.budget)}`}
-          />
-          <StatCard
-            label="Leadlar"
-            value={`${fmt(t.lead)} / ${fmt(pf.lead)}`}
-            hint={`CPL $${fmt(t.cpl, 2)}`}
-            index={t.leadIndex}
-          />
-          <StatCard
-            label="Q.Leadlar"
-            value={`${fmt(t.qlTotal)} / ${fmt(pf.qlead)}`}
-            hint={`CPQL $${fmt(t.cpql, 2)}`}
-            index={t.qlIndex}
-          />
-          <StatCard
-            label="Yotdi / Sotuv"
-            value={`${fmt(t.yotdi)} / ${fmt(pf.yotdi)}`}
-            hint={`CPA $${fmt(t.cpa, 2)}`}
-            index={pf.yotdi > 0 ? (t.yotdi / pf.yotdi) * 100 : 0}
-          />
-          <StatCard label="Lead→Sotuv %" value={`${fmt(t.leadToSale, 1)}%`} hint="fakt" />
-          <StatCard label="Q.Lead→Sotuv %" value={`${fmt(t.qlToSale, 1)}%`} hint="fakt" />
-        </div>
+        {showLoader ? (
+          <div className="flex items-center justify-center gap-2 py-24 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" /> Yuklanmoqda…
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="card-surface py-16 text-center text-muted-foreground">
+            Hali mijoz yo'q. Yuqoridagi <span className="text-foreground">"Yangi mijoz"</span> tugmasi
+            bilan qo'shing.
+          </div>
+        ) : (
+          <div className={loadingData ? "pointer-events-none opacity-60" : ""}>
+            <PlanPanel plan={data.plan} onChange={onChangePlan} />
 
-        <RnpCharts data={data} />
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              <StatCard
+                label="Sarflangan budjet"
+                value={`$${fmt(t.budget)}`}
+                hint={`reja $${fmt(data.plan.budget)}`}
+              />
+              <StatCard
+                label="Leadlar"
+                value={`${fmt(t.lead)} / ${fmt(pf.lead)}`}
+                hint={`CPL $${fmt(t.cpl, 2)}`}
+                index={t.leadIndex}
+              />
+              <StatCard
+                label="Q.Leadlar"
+                value={`${fmt(t.qlTotal)} / ${fmt(pf.qlead)}`}
+                hint={`CPQL $${fmt(t.cpql, 2)}`}
+                index={t.qlIndex}
+              />
+              <StatCard
+                label="Yotdi / Sotuv"
+                value={`${fmt(t.yotdi)} / ${fmt(pf.yotdi)}`}
+                hint={`CPA $${fmt(t.cpa, 2)}`}
+                index={pf.yotdi > 0 ? (t.yotdi / pf.yotdi) * 100 : 0}
+              />
+              <StatCard label="Lead→Sotuv %" value={`${fmt(t.leadToSale, 1)}%`} hint="fakt" />
+              <StatCard label="Q.Lead→Sotuv %" value={`${fmt(t.qlToSale, 1)}%`} hint="fakt" />
+            </div>
 
-        <DailyTable data={data} onChangeRow={onChangeRow} />
+            <div className="mt-5">
+              <RnpCharts data={data} />
+            </div>
+
+            <div className="mt-5">
+              <DailyTable data={data} onChangeRow={onChangeRow} />
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
