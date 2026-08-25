@@ -130,3 +130,34 @@
     color: var(--color-foreground);
   }
 }
+
+@utility hero-glow {
+  background-image: var(--gradient-hero);
+}
+
+@utility text-gradient {
+  background-image: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility shadow-elegant {
+  box-shadow: var(--shadow-elegant);
+}
+
+@utility card-surface {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+@utility cell-input {
+  background-color: color-mix(in oklab, var(--success) 14%, transparent);
+}
+
+@utility cell-auto {
+  background-color: color-mix(in oklab, var(--muted) 55%, transparent);
+  color: var(--color-muted-foreground);
+}
