@@ -4,10 +4,7 @@ export type TemplateItem = {
   description: string;
   tag: string;
   active: boolean;
-  to?:
-    | "/templates/rnp"
-    | "/templates/cpl-cpa"
-    | "/templates/weekly-report";
+  to?: "/templates/rnp" | "/templates/cpl-cpa" | "/templates/weekly-report";
 };
 
 export const templates: TemplateItem[] = [

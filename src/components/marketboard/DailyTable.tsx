@@ -96,9 +96,7 @@ export function DailyTable({
                         inputMode="decimal"
                         value={row[col.key] === 0 ? "" : row[col.key]}
                         placeholder="0"
-                        onChange={(e) =>
-                          onChangeRow(row.day, col.key, Number(e.target.value) || 0)
-                        }
+                        onChange={(e) => onChangeRow(row.day, col.key, Number(e.target.value) || 0)}
                         className="w-full bg-transparent px-2 py-1.5 text-right tabular-nums outline-none focus:bg-primary/10"
                       />
                     </td>
