@@ -18,6 +18,7 @@ import { ExportBar } from "@/components/marketboard/ExportBar";
 import { PlanPanel } from "@/components/marketboard/PlanPanel";
 import { RnpCharts } from "@/components/marketboard/RnpCharts";
 import { StatCard } from "@/components/marketboard/StatCard";
+import { BrandMark } from "@/components/marketboard/BrandMark";
 import type { DayRow, MonthData, PlanSettings } from "@/lib/rnp";
 import { createMonthData, fmt, monthNames, planFunnel, totals } from "@/lib/rnp";
 
@@ -244,6 +245,7 @@ function RnpPage() {
       <div className="mx-auto w-full max-w-7xl space-y-5 px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
+            <BrandMark className="mb-5" />
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"

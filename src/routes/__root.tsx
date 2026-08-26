@@ -79,10 +79,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MarketBoard" },
-      { name: "description", content: "Marketing shablonlari platformasi" },
+      { title: "MarketBoard — Marketing ishlarini tezroq va aniqroq boshqaring" },
+      {
+        name: "description",
+        content:
+          "Funnel, budjet, KPI, hisobot va kontent rejasini bitta marketing workspace'da boshqaring.",
+      },
+      { name: "theme-color", content: "#101827" },
+      { name: "application-name", content: "MarketBoard" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "MarketBoard" },
+      { property: "og:locale", content: "uz_UZ" },
+      {
+        property: "og:title",
+        content: "MarketBoard — Marketing ishlarini tezroq va aniqroq boshqaring",
+      },
+      {
+        property: "og:description",
+        content:
+          "Funnel, budjet, KPI, hisobot va kontent rejasini bitta marketing workspace'da boshqaring.",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:title",
+        content: "MarketBoard — Marketing ishlarini tezroq va aniqroq boshqaring",
+      },
+      {
+        name: "twitter:description",
+        content: "Marketing shablonlari va KPI vositalari — bir joyda.",
+      },
     ],
     links: [
       {
@@ -96,6 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
 
@@ -107,7 +133,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="uz">
       <head>
         <HeadContent />
       </head>

@@ -2,6 +2,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { BrandMark } from "@/components/marketboard/BrandMark";
 
 export function TemplatePageShell({
   title,
@@ -29,6 +30,7 @@ export function TemplatePageShell({
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
+            <BrandMark className="mb-5" />
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
