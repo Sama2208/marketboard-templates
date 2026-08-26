@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as TemplatesCplCpaRouteImport } from './routes/templates.cpl-cpa'
+import { Route as TemplatesLeadReportRouteImport } from './routes/templates.lead-report'
 import { Route as TemplatesRnpRouteImport } from './routes/templates.rnp'
 import { Route as TemplatesWeeklyReportRouteImport } from './routes/templates.weekly-report'
 
@@ -30,6 +31,11 @@ const TemplatesCplCpaRoute = TemplatesCplCpaRouteImport.update({
   path: '/templates/cpl-cpa',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesLeadReportRoute = TemplatesLeadReportRouteImport.update({
+  id: '/templates/lead-report',
+  path: '/templates/lead-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplatesRnpRoute = TemplatesRnpRouteImport.update({
   id: '/templates/rnp',
   path: '/templates/rnp',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
+  '/templates/lead-report': typeof TemplatesLeadReportRoute
   '/templates/rnp': typeof TemplatesRnpRoute
   '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
+  '/templates/lead-report': typeof TemplatesLeadReportRoute
   '/templates/rnp': typeof TemplatesRnpRoute
   '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
+  '/templates/lead-report': typeof TemplatesLeadReportRoute
   '/templates/rnp': typeof TemplatesRnpRoute
   '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
 }
@@ -69,6 +78,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/templates/cpl-cpa'
+    | '/templates/lead-report'
     | '/templates/rnp'
     | '/templates/weekly-report'
   fileRoutesByTo: FileRoutesByTo
@@ -76,6 +86,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/templates/cpl-cpa'
+    | '/templates/lead-report'
     | '/templates/rnp'
     | '/templates/weekly-report'
   id:
@@ -83,6 +94,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/templates/cpl-cpa'
+    | '/templates/lead-report'
     | '/templates/rnp'
     | '/templates/weekly-report'
   fileRoutesById: FileRoutesById
@@ -91,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   TemplatesCplCpaRoute: typeof TemplatesCplCpaRoute
+  TemplatesLeadReportRoute: typeof TemplatesLeadReportRoute
   TemplatesRnpRoute: typeof TemplatesRnpRoute
   TemplatesWeeklyReportRoute: typeof TemplatesWeeklyReportRoute
 }
@@ -118,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesCplCpaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates/lead-report': {
+      id: '/templates/lead-report'
+      path: '/templates/lead-report'
+      fullPath: '/templates/lead-report'
+      preLoaderRoute: typeof TemplatesLeadReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/templates/rnp': {
       id: '/templates/rnp'
       path: '/templates/rnp'
@@ -139,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   TemplatesCplCpaRoute: TemplatesCplCpaRoute,
+  TemplatesLeadReportRoute: TemplatesLeadReportRoute,
   TemplatesRnpRoute: TemplatesRnpRoute,
   TemplatesWeeklyReportRoute: TemplatesWeeklyReportRoute,
 }

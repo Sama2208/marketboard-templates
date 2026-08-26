@@ -4,7 +4,8 @@ export type TemplateItem = {
   description: string;
   tag: string;
   active: boolean;
-  to?: "/templates/rnp" | "/templates/cpl-cpa" | "/templates/weekly-report";
+  to?:
+    "/templates/rnp" | "/templates/cpl-cpa" | "/templates/weekly-report" | "/templates/lead-report";
 };
 
 export const templates: TemplateItem[] = [
@@ -15,6 +16,14 @@ export const templates: TemplateItem[] = [
     tag: "Analitika",
     active: true,
     to: "/templates/rnp",
+  },
+  {
+    slug: "lead-report",
+    title: "Lidlar bo'yicha to'liq hisobot",
+    description: "Operator, status va kunlik lid zanjirini bitta to'liq hisobotda boshqarish",
+    tag: "Hisobot",
+    active: true,
+    to: "/templates/lead-report",
   },
   {
     slug: "cpl-cpa",

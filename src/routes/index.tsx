@@ -117,7 +117,7 @@ function Index() {
 
           <div className="mx-auto mt-12 grid max-w-2xl gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-border/80 bg-card/60 px-4 py-4 text-center backdrop-blur">
-              <p className="font-display text-2xl font-bold text-primary">5</p>
+              <p className="font-display text-2xl font-bold text-primary">4</p>
               <p className="mt-1 text-xs text-muted-foreground">Marketing shabloni</p>
             </div>
             <div className="rounded-2xl border border-border/80 bg-card/60 px-4 py-4 text-center backdrop-blur">
