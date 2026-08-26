@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BarChart3, Layers, Sparkles } from "lucide-react";
 import { TemplateGallery } from "@/components/marketboard/TemplateGallery";
+import { PricingSection } from "@/components/marketboard/PricingSection";
 import { useAuth } from "@/hooks/use-auth";
 
 function AuthNavButton() {
@@ -76,6 +77,12 @@ function Index() {
           >
             Shablonlar
           </a>
+          <a
+            href="#tariflar"
+            className="hidden rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground sm:inline-flex"
+          >
+            Tariflar
+          </a>
           <AuthNavButton />
         </div>
       </header>
@@ -86,8 +93,7 @@ function Index() {
             Marketologlar va agentliklar uchun
           </span>
           <h1 className="mt-6 font-display text-3xl font-bold leading-tight sm:text-5xl">
-            Marketing shablonlari platformasi —{" "}
-            <span className="text-gradient">bir joyda</span>
+            Marketing shablonlari platformasi — <span className="text-gradient">bir joyda</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-lg">
             Reklama funnelini kuzatish, budjetni rejalashtirish va mijozga hisobot tayyorlash uchun
@@ -121,6 +127,7 @@ function Index() {
       </section>
 
       <TemplateGallery />
+      <PricingSection />
 
       <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} MarketBoard. Barcha huquqlar himoyalangan.

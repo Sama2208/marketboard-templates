@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useSubscription } from "@/hooks/use-subscription";
 import {
   addClient,
   deleteClient,
@@ -56,6 +57,7 @@ const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
 function RnpPage() {
   const navigate = useNavigate();
   const { user, session, loading, signOut } = useAuth();
+  const { subscription, loading: subscriptionLoading } = useSubscription();
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login", replace: true });
@@ -264,6 +266,9 @@ function RnpPage() {
             {user?.email ? (
               <span className="hidden text-xs text-muted-foreground sm:inline">{user.email}</span>
             ) : null}
+            <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+              {subscriptionLoading ? "…" : subscription.plan === "pro" ? "Pro" : "Free"}
+            </span>
             <button
               type="button"
               onClick={handleSignOut}
