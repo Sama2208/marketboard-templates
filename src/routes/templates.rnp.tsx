@@ -13,6 +13,7 @@ import {
 import { loadMonthRemote, saveMonthRemote } from "@/lib/supabase/rnpStore";
 import { ClientBar } from "@/components/marketboard/ClientBar";
 import { DailyTable } from "@/components/marketboard/DailyTable";
+import { ExportBar } from "@/components/marketboard/ExportBar";
 import { PlanPanel } from "@/components/marketboard/PlanPanel";
 import { RnpCharts } from "@/components/marketboard/RnpCharts";
 import { StatCard } from "@/components/marketboard/StatCard";
@@ -234,6 +235,7 @@ function RnpPage() {
   const t = totals(data);
   const pf = planFunnel(data.plan);
   const showLoader = !clientsReady;
+  const selectedClientName = clients.find((client) => client.id === clientId)?.name ?? "Mijoz";
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -310,11 +312,18 @@ function RnpPage() {
           </div>
         ) : clients.length === 0 ? (
           <div className="card-surface py-16 text-center text-muted-foreground">
-            Hali mijoz yo'q. Yuqoridagi <span className="text-foreground">"Yangi mijoz"</span> tugmasi
-            bilan qo'shing.
+            Hali mijoz yo'q. Yuqoridagi <span className="text-foreground">"Yangi mijoz"</span>{" "}
+            tugmasi bilan qo'shing.
           </div>
         ) : (
           <div className={loadingData ? "pointer-events-none opacity-60" : ""}>
+            <ExportBar
+              data={data}
+              clientName={selectedClientName}
+              year={year}
+              month={month}
+              disabled={loadingData || saving}
+            />
             <PlanPanel plan={data.plan} onChange={onChangePlan} />
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
