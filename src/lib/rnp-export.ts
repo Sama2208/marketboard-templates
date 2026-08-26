@@ -1,6 +1,5 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
 import type { DayRow, MonthData } from "@/lib/rnp";
 import { dayCalc, fmt, monthNames, planFunnel, totals } from "@/lib/rnp";
 
@@ -66,6 +65,18 @@ const csvCell = (value: unknown) => {
   return `"${safe.replaceAll('"', '""')}"`;
 };
 
+const escapeHtml = (value: unknown) =>
+  String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+
+const htmlCell = (value: unknown, header = false) => {
+  const escaped = escapeHtml(value);
+  return `<${header ? "th" : "td"}>${escaped}</${header ? "th" : "td"}>`;
+};
+
 const round = (value: number, digits = 2) =>
   Number.isFinite(value) ? Number(value.toFixed(digits)) : 0;
 
@@ -128,17 +139,11 @@ export function downloadRnpCsv(data: MonthData, clientName: string, year: number
   );
 }
 
-export function downloadRnpXlsx(data: MonthData, clientName: string, year: number, month: number) {
+export function downloadRnpExcel(data: MonthData, clientName: string, year: number, month: number) {
   const rows = buildRnpExportRows(data);
   const total = totalExportRow(data);
   const plan = planFunnel(data.plan);
-  const workbook = XLSX.utils.book_new();
-  const dailySheet = XLSX.utils.json_to_sheet([...rows, { ...total, Kun: "TOTAL" }]);
-  const planSheet = XLSX.utils.aoa_to_sheet([
-    ["MarketBoard RNP", clientName],
-    ["Davr", `${monthNames[month]} ${year}`],
-    [],
-    ["Oylik reja", "Qiymat"],
+  const planRows = [
     ["Lead maqsadi", data.plan.leadGoal],
     ["Q.Lead konversiya %", data.plan.qlRate],
     ["Yozildi konversiya %", data.plan.zapRate],
@@ -146,17 +151,37 @@ export function downloadRnpXlsx(data: MonthData, clientName: string, year: numbe
     ["Yotdi konversiya %", data.plan.wonRate],
     ["Oylik budjet $", data.plan.budget],
     ["Ish kunlari", data.plan.workDays],
-    [],
-    ["Funnel reja", "Qiymat"],
-    ["Lead", plan.lead],
-    ["Q.Lead", plan.qlead],
-    ["Yozildi", plan.zapisan],
-    ["Keldi", plan.keldi],
-    ["Yotdi", plan.yotdi],
-  ]);
-  XLSX.utils.book_append_sheet(workbook, dailySheet, "Kunlik ma'lumot");
-  XLSX.utils.book_append_sheet(workbook, planSheet, "Oylik reja");
-  XLSX.writeFile(workbook, `${fileBase(clientName, year, month)}.xlsx`, { compression: true });
+    ["Lead reja", plan.lead],
+    ["Q.Lead reja", plan.qlead],
+    ["Yozildi reja", plan.zapisan],
+    ["Keldi reja", plan.keldi],
+    ["Yotdi reja", plan.yotdi],
+  ];
+  const planTable = planRows
+    .map(([label, value]) => `<tr>${htmlCell(label)}${htmlCell(value)}</tr>`)
+    .join("");
+  const dailyTable = [
+    `<tr>${dailyHeaders.map((header) => htmlCell(header, true)).join("")}</tr>`,
+    ...rows.map(
+      (row) => `<tr>${dailyHeaders.map((header) => htmlCell(row[header])).join("")}</tr>`,
+    ),
+    `<tr class="total">${["TOTAL", ...dailyHeaders.slice(1).map((header) => total[header])]
+      .map((value) => htmlCell(value))
+      .join("")}</tr>`,
+  ].join("");
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    body{font-family:Arial,sans-serif;color:#172033}h1{font-size:20px}h2{font-size:15px;margin-top:24px}
+    table{border-collapse:collapse;margin-bottom:16px}th,td{border:1px solid #9aa7bd;padding:5px 7px;font-size:11px;white-space:nowrap}
+    th{background:#dbe7ff;font-weight:bold}.total td{background:#e8efff;font-weight:bold}
+  </style></head><body>
+    <h1>MarketBoard RNP — ${escapeHtml(`${clientName} | ${monthNames[month]} ${year}`)}</h1>
+    <h2>Oylik reja</h2><table><tr><th>Ko'rsatkich</th><th>Qiymat</th></tr>${planTable}</table>
+    <h2>Kunlik ma'lumot</h2><table>${dailyTable}</table>
+  </body></html>`;
+  downloadBlob(
+    new Blob(["\uFEFF" + html], { type: "application/vnd.ms-excel;charset=utf-8" }),
+    `${fileBase(clientName, year, month)}.xls`,
+  );
 }
 
 const pdfText = (value: string) =>

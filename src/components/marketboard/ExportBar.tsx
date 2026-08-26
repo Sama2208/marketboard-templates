@@ -1,6 +1,6 @@
 import { FileDown, FileSpreadsheet, FileText } from "lucide-react";
 import type { MonthData } from "@/lib/rnp";
-import { downloadRnpCsv, downloadRnpPdf, downloadRnpXlsx } from "@/lib/rnp-export";
+import { downloadRnpCsv, downloadRnpExcel, downloadRnpPdf } from "@/lib/rnp-export";
 
 export function ExportBar({
   data,
@@ -17,7 +17,7 @@ export function ExportBar({
 }) {
   const run = (format: "xlsx" | "csv" | "pdf") => {
     try {
-      if (format === "xlsx") downloadRnpXlsx(data, clientName, year, month);
+      if (format === "xlsx") downloadRnpExcel(data, clientName, year, month);
       if (format === "csv") downloadRnpCsv(data, clientName, year, month);
       if (format === "pdf") downloadRnpPdf(data, clientName, year, month);
     } catch (error) {
