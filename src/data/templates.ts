@@ -7,7 +7,6 @@ export type TemplateItem = {
   to?:
     | "/templates/rnp"
     | "/templates/cpl-cpa"
-    | "/templates/budget-planner"
     | "/templates/weekly-report"
     | "/templates/content-calendar";
 };
@@ -28,14 +27,6 @@ export const templates: TemplateItem[] = [
     tag: "Kalkulyator",
     active: true,
     to: "/templates/cpl-cpa",
-  },
-  {
-    slug: "budget-planner",
-    title: "Budjet Planner",
-    description: "Kanallar bo'yicha oylik reklama budjetini taqsimlash",
-    tag: "Planlash",
-    active: true,
-    to: "/templates/budget-planner",
   },
   {
     slug: "weekly-report",

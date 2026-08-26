@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as TemplatesBudgetPlannerRouteImport } from './routes/templates.budget-planner'
 import { Route as TemplatesContentCalendarRouteImport } from './routes/templates.content-calendar'
 import { Route as TemplatesCplCpaRouteImport } from './routes/templates.cpl-cpa'
 import { Route as TemplatesRnpRouteImport } from './routes/templates.rnp'
@@ -25,11 +24,6 @@ const IndexRoute = IndexRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TemplatesBudgetPlannerRoute = TemplatesBudgetPlannerRouteImport.update({
-  id: '/templates/budget-planner',
-  path: '/templates/budget-planner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TemplatesContentCalendarRoute =
@@ -57,7 +51,6 @@ const TemplatesWeeklyReportRoute = TemplatesWeeklyReportRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/templates/budget-planner': typeof TemplatesBudgetPlannerRoute
   '/templates/content-calendar': typeof TemplatesContentCalendarRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
@@ -66,7 +59,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/templates/budget-planner': typeof TemplatesBudgetPlannerRoute
   '/templates/content-calendar': typeof TemplatesContentCalendarRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
@@ -76,7 +68,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/templates/budget-planner': typeof TemplatesBudgetPlannerRoute
   '/templates/content-calendar': typeof TemplatesContentCalendarRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
@@ -87,7 +78,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
-    | '/templates/budget-planner'
     | '/templates/content-calendar'
     | '/templates/cpl-cpa'
     | '/templates/rnp'
@@ -96,7 +86,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/templates/budget-planner'
     | '/templates/content-calendar'
     | '/templates/cpl-cpa'
     | '/templates/rnp'
@@ -105,7 +94,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
-    | '/templates/budget-planner'
     | '/templates/content-calendar'
     | '/templates/cpl-cpa'
     | '/templates/rnp'
@@ -115,7 +103,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  TemplatesBudgetPlannerRoute: typeof TemplatesBudgetPlannerRoute
   TemplatesContentCalendarRoute: typeof TemplatesContentCalendarRoute
   TemplatesCplCpaRoute: typeof TemplatesCplCpaRoute
   TemplatesRnpRoute: typeof TemplatesRnpRoute
@@ -136,13 +123,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/templates/budget-planner': {
-      id: '/templates/budget-planner'
-      path: '/templates/budget-planner'
-      fullPath: '/templates/budget-planner'
-      preLoaderRoute: typeof TemplatesBudgetPlannerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/templates/content-calendar': {
@@ -179,7 +159,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  TemplatesBudgetPlannerRoute: TemplatesBudgetPlannerRoute,
   TemplatesContentCalendarRoute: TemplatesContentCalendarRoute,
   TemplatesCplCpaRoute: TemplatesCplCpaRoute,
   TemplatesRnpRoute: TemplatesRnpRoute,

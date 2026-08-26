@@ -8,12 +8,14 @@ export function ExportBar({
   year,
   month,
   disabled,
+  isPro = false,
 }: {
   data: MonthData;
   clientName: string;
   year: number;
   month: number;
   disabled?: boolean;
+  isPro?: boolean;
 }) {
   const run = (format: "xlsx" | "csv" | "pdf") => {
     try {
@@ -38,11 +40,12 @@ export function ExportBar({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={disabled}
+          disabled={disabled || !isPro}
+          title={!isPro ? "Excel eksport — Pro rejada" : undefined}
           onClick={() => run("xlsx")}
           className="inline-flex items-center gap-1.5 rounded-lg border border-success/50 px-3 py-2 text-xs font-medium text-success transition-colors hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+          <FileSpreadsheet className="h-3.5 w-3.5" /> Excel{!isPro ? " · Pro" : ""}
         </button>
         <button
           type="button"
@@ -54,11 +57,12 @@ export function ExportBar({
         </button>
         <button
           type="button"
-          disabled={disabled}
+          disabled={disabled || !isPro}
+          title={!isPro ? "PDF eksport — Pro rejada" : undefined}
           onClick={() => run("pdf")}
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <FileDown className="h-3.5 w-3.5" /> PDF
+          <FileDown className="h-3.5 w-3.5" /> PDF{!isPro ? " · Pro" : ""}
         </button>
       </div>
     </section>

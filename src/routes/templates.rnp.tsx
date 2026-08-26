@@ -58,7 +58,7 @@ const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
 function RnpPage() {
   const navigate = useNavigate();
   const { user, session, loading, signOut } = useAuth();
-  const { subscription, loading: subscriptionLoading } = useSubscription();
+  const { subscription, loading: subscriptionLoading, isPro } = useSubscription();
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login", replace: true });
@@ -179,6 +179,12 @@ function RnpPage() {
 
   // Mijoz amallari
   const onAddClient = async () => {
+    if (!isPro && clients.length >= 1) {
+      window.alert(
+        "Free rejada faqat 1 ta mijoz mumkin. Cheksiz mijoz uchun Pro obunani oling (Telegram orqali).",
+      );
+      return;
+    }
     const name = window.prompt("Yangi mijoz nomi:", "");
     if (name === null) return;
     setBusy(true);
@@ -330,6 +336,7 @@ function RnpPage() {
               year={year}
               month={month}
               disabled={loadingData || saving}
+              isPro={isPro}
             />
             <PlanPanel plan={data.plan} onChange={onChangePlan} />
 

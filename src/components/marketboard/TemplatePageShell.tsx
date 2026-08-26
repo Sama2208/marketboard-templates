@@ -1,7 +1,8 @@
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, Loader2, Lock, LogOut } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useSubscription } from "@/hooks/use-subscription";
 import { BrandMark } from "@/components/marketboard/BrandMark";
 
 export function TemplatePageShell({
@@ -15,6 +16,7 @@ export function TemplatePageShell({
 }) {
   const navigate = useNavigate();
   const { user, session, loading, signOut } = useAuth();
+  const { isPro, loading: subLoading } = useSubscription();
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login", replace: true });
@@ -59,7 +61,38 @@ export function TemplatePageShell({
             </button>
           </div>
         </header>
-        {children}
+        {subLoading ? (
+          <div className="flex items-center justify-center gap-2 py-24 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" /> Yuklanmoqda…
+          </div>
+        ) : !isPro ? (
+          <div className="card-surface mx-auto max-w-md py-12 text-center">
+            <Lock className="mx-auto h-8 w-8 text-primary" />
+            <h2 className="mt-4 font-display text-lg font-semibold">Bu shablon — Pro rejada</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              "{title}" shabloni Pro obunada ochiladi. RNP Funnel Tracker Free rejada ham to'liq
+              ishlaydi.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <Link
+                to="/"
+                className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
+              >
+                Tariflar
+              </Link>
+              <a
+                href="https://t.me/samandartargetadmin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+              >
+                Pro olish (Telegram)
+              </a>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
       </div>
     </main>
   );
