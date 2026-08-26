@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { ArrowDownRight, ArrowUpRight, FileText } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, FileText, Trash2 } from "lucide-react";
 import { TemplatePageShell } from "@/components/marketboard/TemplatePageShell";
 import { useAuth } from "@/hooks/use-auth";
 import { useTemplateStorage } from "@/hooks/use-template-storage";
@@ -52,6 +52,12 @@ function WeeklyReportPage() {
     setState((prev) => ({ ...prev, [period]: { ...prev[period], [key]: Math.max(0, value) } }));
   };
 
+  const handleClear = () => {
+    if (window.confirm("Haftalik hisobot ma'lumotlarini boshlang'ich holatga qaytarasizmi?")) {
+      setState(initialState);
+    }
+  };
+
   return (
     <TemplatePageShell
       title="Haftalik Hisobot"
@@ -59,9 +65,18 @@ function WeeklyReportPage() {
     >
       <section className="grid gap-5 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
         <div className="card-surface p-5 sm:p-6">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            <h2 className="font-display text-lg font-semibold">Hisobot ma'lumotlari</h2>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              <h2 className="font-display text-lg font-semibold">Hisobot ma'lumotlari</h2>
+            </div>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-danger/50 px-2.5 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Tozalash
+            </button>
           </div>
           <label className="mt-5 block text-xs font-medium text-muted-foreground">
             Mijoz nomi

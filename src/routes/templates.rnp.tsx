@@ -11,7 +11,7 @@ import {
   renameClient,
   type Client,
 } from "@/lib/supabase/clients";
-import { loadMonthRemote, saveMonthRemote } from "@/lib/supabase/rnpStore";
+import { deleteMonthRemote, loadMonthRemote, saveMonthRemote } from "@/lib/supabase/rnpStore";
 import { ClientBar } from "@/components/marketboard/ClientBar";
 import { DailyTable } from "@/components/marketboard/DailyTable";
 import { ExportBar } from "@/components/marketboard/ExportBar";
@@ -151,6 +151,33 @@ function RnpPage() {
     },
     [clientId, year, month],
   );
+
+  const onClearMonth = useCallback(async () => {
+    if (!clientId || loadingData) return;
+    const clientName = clients.find((client) => client.id === clientId)?.name ?? "mijoz";
+    const monthName = `${monthNames[month]} ${year}`;
+    if (
+      !window.confirm(
+        `"${clientName}" mijozining ${monthName} oyidagi barcha RNP ma'lumotlarini o'chirasizmi?`,
+      )
+    )
+      return;
+
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    setSaving(true);
+    try {
+      await deleteMonthRemote(clientId, year, month);
+      setData(createMonthData(year, month));
+    } catch (e) {
+      console.error("Oy ma'lumotlarini o'chirishda xatolik", e);
+      window.alert("Oy ma'lumotlari o'chirilmadi. Qayta urinib ko'ring.");
+    } finally {
+      setSaving(false);
+    }
+  }, [clientId, clients, loadingData, month, year]);
 
   const onChangeRow = useCallback(
     (day: number, key: keyof DayRow, value: number) => {
@@ -337,6 +364,7 @@ function RnpPage() {
               month={month}
               disabled={loadingData || saving}
               isPro={isPro}
+              onClear={onClearMonth}
             />
             <PlanPanel plan={data.plan} onChange={onChangePlan} />
 

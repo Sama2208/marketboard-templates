@@ -45,3 +45,17 @@ export async function saveMonthRemote(
   );
   if (error) throw error;
 }
+
+export async function deleteMonthRemote(
+  clientId: string,
+  year: number,
+  month: number,
+): Promise<void> {
+  const { error } = await supabase
+    .from("rnp_months")
+    .delete()
+    .eq("client_id", clientId)
+    .eq("year", year)
+    .eq("month", month + 1);
+  if (error) throw error;
+}

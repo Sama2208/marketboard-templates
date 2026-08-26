@@ -1,4 +1,4 @@
-import { FileDown, FileSpreadsheet, FileText } from "lucide-react";
+import { FileDown, FileSpreadsheet, FileText, Trash2 } from "lucide-react";
 import type { MonthData } from "@/lib/rnp";
 import { downloadRnpCsv, downloadRnpExcel, downloadRnpPdf } from "@/lib/rnp-export";
 
@@ -9,6 +9,7 @@ export function ExportBar({
   month,
   disabled,
   isPro = false,
+  onClear,
 }: {
   data: MonthData;
   clientName: string;
@@ -16,6 +17,7 @@ export function ExportBar({
   month: number;
   disabled?: boolean;
   isPro?: boolean;
+  onClear?: () => void;
 }) {
   const run = (format: "xlsx" | "csv" | "pdf") => {
     try {
@@ -64,6 +66,16 @@ export function ExportBar({
         >
           <FileDown className="h-3.5 w-3.5" /> PDF{!isPro ? " · Pro" : ""}
         </button>
+        {onClear ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onClear}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-danger/50 px-3 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Oyni tozalash
+          </button>
+        ) : null}
       </div>
     </section>
   );

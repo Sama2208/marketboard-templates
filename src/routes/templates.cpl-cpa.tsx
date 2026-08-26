@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { Calculator, DollarSign, Percent, Users } from "lucide-react";
+import { Calculator, DollarSign, Percent, Trash2, Users } from "lucide-react";
 import { TemplatePageShell } from "@/components/marketboard/TemplatePageShell";
 import { useAuth } from "@/hooks/use-auth";
 import { useTemplateStorage } from "@/hooks/use-template-storage";
@@ -55,6 +55,12 @@ function CplCpaPage() {
     setValues((prev) => ({ ...prev, [key]: Math.max(0, Number(event.target.value) || 0) }));
   };
 
+  const handleClear = () => {
+    if (window.confirm("CPL / CPA ma'lumotlarini boshlang'ich holatga qaytarasizmi?")) {
+      setValues(initialState);
+    }
+  };
+
   return (
     <TemplatePageShell
       title="CPL / CPA Kalkulyator"
@@ -62,9 +68,18 @@ function CplCpaPage() {
     >
       <section className="grid gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <div className="card-surface p-5 sm:p-6">
-          <div className="flex items-center gap-2">
-            <Calculator className="h-5 w-5 text-primary" />
-            <h2 className="font-display text-lg font-semibold">Kirish ma'lumotlari</h2>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-primary" />
+              <h2 className="font-display text-lg font-semibold">Kirish ma'lumotlari</h2>
+            </div>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-danger/50 px-2.5 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Tozalash
+            </button>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
             <label className="text-xs font-medium text-muted-foreground">
