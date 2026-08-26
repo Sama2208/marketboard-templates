@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { strToU8, zipSync } from "fflate";
 import type { DayRow, MonthData } from "@/lib/rnp";
 import { dayCalc, fmt, monthNames, planFunnel, totals } from "@/lib/rnp";
 
@@ -65,17 +66,40 @@ const csvCell = (value: unknown) => {
   return `"${safe.replaceAll('"', '""')}"`;
 };
 
-const escapeHtml = (value: unknown) =>
+const escapeXml = (value: unknown) =>
   String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 
-const htmlCell = (value: unknown, header = false) => {
-  const escaped = escapeHtml(value);
-  return `<${header ? "th" : "td"}>${escaped}</${header ? "th" : "td"}>`;
+const excelColumn = (index: number) => {
+  let value = index + 1;
+  let result = "";
+  while (value > 0) {
+    const remainder = (value - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    value = Math.floor((value - 1) / 26);
+  }
+  return result;
 };
+
+const excelCell = (value: unknown, row: number, column: number) => {
+  const ref = `${excelColumn(column)}${row}`;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return `<c r="${ref}" t="n"><v>${value}</v></c>`;
+  }
+  return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${escapeXml(value)}</t></is></c>`;
+};
+
+const excelSheet = (rows: unknown[][]) =>
+  `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rows
+    .map(
+      (row, rowIndex) =>
+        `<row r="${rowIndex + 1}">${row.map((value, columnIndex) => excelCell(value, rowIndex + 1, columnIndex)).join("")}</row>`,
+    )
+    .join("")}</sheetData></worksheet>`;
 
 const round = (value: number, digits = 2) =>
   Number.isFinite(value) ? Number(value.toFixed(digits)) : 0;
@@ -143,7 +167,8 @@ export function downloadRnpExcel(data: MonthData, clientName: string, year: numb
   const rows = buildRnpExportRows(data);
   const total = totalExportRow(data);
   const plan = planFunnel(data.plan);
-  const planRows = [
+  const planRows: unknown[][] = [
+    ["Ko'rsatkich", "Qiymat"],
     ["Lead maqsadi", data.plan.leadGoal],
     ["Q.Lead konversiya %", data.plan.qlRate],
     ["Yozildi konversiya %", data.plan.zapRate],
@@ -157,30 +182,32 @@ export function downloadRnpExcel(data: MonthData, clientName: string, year: numb
     ["Keldi reja", plan.keldi],
     ["Yotdi reja", plan.yotdi],
   ];
-  const planTable = planRows
-    .map(([label, value]) => `<tr>${htmlCell(label)}${htmlCell(value)}</tr>`)
-    .join("");
-  const dailyTable = [
-    `<tr>${dailyHeaders.map((header) => htmlCell(header, true)).join("")}</tr>`,
-    ...rows.map(
-      (row) => `<tr>${dailyHeaders.map((header) => htmlCell(row[header])).join("")}</tr>`,
+  const dailyRows: unknown[][] = [
+    dailyHeaders,
+    ...rows.map((row) => dailyHeaders.map((header) => row[header])),
+    ["TOTAL", ...dailyHeaders.slice(1).map((header) => total[header])],
+  ];
+  const files = {
+    "[Content_Types].xml": strToU8(
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/> </Types>`,
     ),
-    `<tr class="total">${["TOTAL", ...dailyHeaders.slice(1).map((header) => total[header])]
-      .map((value) => htmlCell(value))
-      .join("")}</tr>`,
-  ].join("");
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-    body{font-family:Arial,sans-serif;color:#172033}h1{font-size:20px}h2{font-size:15px;margin-top:24px}
-    table{border-collapse:collapse;margin-bottom:16px}th,td{border:1px solid #9aa7bd;padding:5px 7px;font-size:11px;white-space:nowrap}
-    th{background:#dbe7ff;font-weight:bold}.total td{background:#e8efff;font-weight:bold}
-  </style></head><body>
-    <h1>MarketBoard RNP — ${escapeHtml(`${clientName} | ${monthNames[month]} ${year}`)}</h1>
-    <h2>Oylik reja</h2><table><tr><th>Ko'rsatkich</th><th>Qiymat</th></tr>${planTable}</table>
-    <h2>Kunlik ma'lumot</h2><table>${dailyTable}</table>
-  </body></html>`;
+    "_rels/.rels": strToU8(
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+    ),
+    "xl/workbook.xml": strToU8(
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Oylik reja" sheetId="1" r:id="rId1"/><sheet name="Kunlik ma'lumot" sheetId="2" r:id="rId2"/></sheets></workbook>`,
+    ),
+    "xl/_rels/workbook.xml.rels": strToU8(
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`,
+    ),
+    "xl/worksheets/sheet1.xml": strToU8(excelSheet(planRows)),
+    "xl/worksheets/sheet2.xml": strToU8(excelSheet(dailyRows)),
+  };
   downloadBlob(
-    new Blob(["\uFEFF" + html], { type: "application/vnd.ms-excel;charset=utf-8" }),
-    `${fileBase(clientName, year, month)}.xls`,
+    new Blob([zipSync(files) as unknown as BlobPart], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+    `${fileBase(clientName, year, month)}.xlsx`,
   );
 }
 
