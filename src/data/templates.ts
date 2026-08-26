@@ -7,8 +7,7 @@ export type TemplateItem = {
   to?:
     | "/templates/rnp"
     | "/templates/cpl-cpa"
-    | "/templates/weekly-report"
-    | "/templates/content-calendar";
+    | "/templates/weekly-report";
 };
 
 export const templates: TemplateItem[] = [
@@ -35,13 +34,5 @@ export const templates: TemplateItem[] = [
     tag: "Hisobot",
     active: true,
     to: "/templates/weekly-report",
-  },
-  {
-    slug: "content-calendar",
-    title: "Kontent Kalendar",
-    description: "Kontent rejasini oylik kalendar ko'rinishida boshqarish",
-    tag: "Kontent",
-    active: true,
-    to: "/templates/content-calendar",
   },
 ];

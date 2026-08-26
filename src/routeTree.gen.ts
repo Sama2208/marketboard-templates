@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as TemplatesContentCalendarRouteImport } from './routes/templates.content-calendar'
 import { Route as TemplatesCplCpaRouteImport } from './routes/templates.cpl-cpa'
 import { Route as TemplatesRnpRouteImport } from './routes/templates.rnp'
 import { Route as TemplatesWeeklyReportRouteImport } from './routes/templates.weekly-report'
@@ -26,12 +25,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplatesContentCalendarRoute =
-  TemplatesContentCalendarRouteImport.update({
-    id: '/templates/content-calendar',
-    path: '/templates/content-calendar',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const TemplatesCplCpaRoute = TemplatesCplCpaRouteImport.update({
   id: '/templates/cpl-cpa',
   path: '/templates/cpl-cpa',
@@ -51,7 +44,6 @@ const TemplatesWeeklyReportRoute = TemplatesWeeklyReportRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/templates/content-calendar': typeof TemplatesContentCalendarRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
   '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
@@ -59,7 +51,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/templates/content-calendar': typeof TemplatesContentCalendarRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
   '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
@@ -68,7 +59,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/templates/content-calendar': typeof TemplatesContentCalendarRoute
   '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
   '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
@@ -78,7 +68,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
-    | '/templates/content-calendar'
     | '/templates/cpl-cpa'
     | '/templates/rnp'
     | '/templates/weekly-report'
@@ -86,7 +75,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/templates/content-calendar'
     | '/templates/cpl-cpa'
     | '/templates/rnp'
     | '/templates/weekly-report'
@@ -94,7 +82,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
-    | '/templates/content-calendar'
     | '/templates/cpl-cpa'
     | '/templates/rnp'
     | '/templates/weekly-report'
@@ -103,7 +90,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  TemplatesContentCalendarRoute: typeof TemplatesContentCalendarRoute
   TemplatesCplCpaRoute: typeof TemplatesCplCpaRoute
   TemplatesRnpRoute: typeof TemplatesRnpRoute
   TemplatesWeeklyReportRoute: typeof TemplatesWeeklyReportRoute
@@ -123,13 +109,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/templates/content-calendar': {
-      id: '/templates/content-calendar'
-      path: '/templates/content-calendar'
-      fullPath: '/templates/content-calendar'
-      preLoaderRoute: typeof TemplatesContentCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/templates/cpl-cpa': {
@@ -159,7 +138,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  TemplatesContentCalendarRoute: TemplatesContentCalendarRoute,
   TemplatesCplCpaRoute: TemplatesCplCpaRoute,
   TemplatesRnpRoute: TemplatesRnpRoute,
   TemplatesWeeklyReportRoute: TemplatesWeeklyReportRoute,
