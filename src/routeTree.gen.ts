@@ -11,7 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as TemplatesBudgetPlannerRouteImport } from './routes/templates.budget-planner'
+import { Route as TemplatesContentCalendarRouteImport } from './routes/templates.content-calendar'
+import { Route as TemplatesCplCpaRouteImport } from './routes/templates.cpl-cpa'
 import { Route as TemplatesRnpRouteImport } from './routes/templates.rnp'
+import { Route as TemplatesWeeklyReportRouteImport } from './routes/templates.weekly-report'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +27,99 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesBudgetPlannerRoute = TemplatesBudgetPlannerRouteImport.update({
+  id: '/templates/budget-planner',
+  path: '/templates/budget-planner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesContentCalendarRoute =
+  TemplatesContentCalendarRouteImport.update({
+    id: '/templates/content-calendar',
+    path: '/templates/content-calendar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TemplatesCplCpaRoute = TemplatesCplCpaRouteImport.update({
+  id: '/templates/cpl-cpa',
+  path: '/templates/cpl-cpa',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TemplatesRnpRoute = TemplatesRnpRouteImport.update({
   id: '/templates/rnp',
   path: '/templates/rnp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesWeeklyReportRoute = TemplatesWeeklyReportRouteImport.update({
+  id: '/templates/weekly-report',
+  path: '/templates/weekly-report',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/templates/budget-planner': typeof TemplatesBudgetPlannerRoute
+  '/templates/content-calendar': typeof TemplatesContentCalendarRoute
+  '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
+  '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/templates/budget-planner': typeof TemplatesBudgetPlannerRoute
+  '/templates/content-calendar': typeof TemplatesContentCalendarRoute
+  '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
+  '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/templates/budget-planner': typeof TemplatesBudgetPlannerRoute
+  '/templates/content-calendar': typeof TemplatesContentCalendarRoute
+  '/templates/cpl-cpa': typeof TemplatesCplCpaRoute
   '/templates/rnp': typeof TemplatesRnpRoute
+  '/templates/weekly-report': typeof TemplatesWeeklyReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/templates/rnp'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/templates/budget-planner'
+    | '/templates/content-calendar'
+    | '/templates/cpl-cpa'
+    | '/templates/rnp'
+    | '/templates/weekly-report'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/templates/rnp'
-  id: '__root__' | '/' | '/login' | '/templates/rnp'
+  to:
+    | '/'
+    | '/login'
+    | '/templates/budget-planner'
+    | '/templates/content-calendar'
+    | '/templates/cpl-cpa'
+    | '/templates/rnp'
+    | '/templates/weekly-report'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/templates/budget-planner'
+    | '/templates/content-calendar'
+    | '/templates/cpl-cpa'
+    | '/templates/rnp'
+    | '/templates/weekly-report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  TemplatesBudgetPlannerRoute: typeof TemplatesBudgetPlannerRoute
+  TemplatesContentCalendarRoute: typeof TemplatesContentCalendarRoute
+  TemplatesCplCpaRoute: typeof TemplatesCplCpaRoute
   TemplatesRnpRoute: typeof TemplatesRnpRoute
+  TemplatesWeeklyReportRoute: typeof TemplatesWeeklyReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +138,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates/budget-planner': {
+      id: '/templates/budget-planner'
+      path: '/templates/budget-planner'
+      fullPath: '/templates/budget-planner'
+      preLoaderRoute: typeof TemplatesBudgetPlannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/content-calendar': {
+      id: '/templates/content-calendar'
+      path: '/templates/content-calendar'
+      fullPath: '/templates/content-calendar'
+      preLoaderRoute: typeof TemplatesContentCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/cpl-cpa': {
+      id: '/templates/cpl-cpa'
+      path: '/templates/cpl-cpa'
+      fullPath: '/templates/cpl-cpa'
+      preLoaderRoute: typeof TemplatesCplCpaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/templates/rnp': {
       id: '/templates/rnp'
       path: '/templates/rnp'
       fullPath: '/templates/rnp'
       preLoaderRoute: typeof TemplatesRnpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/weekly-report': {
+      id: '/templates/weekly-report'
+      path: '/templates/weekly-report'
+      fullPath: '/templates/weekly-report'
+      preLoaderRoute: typeof TemplatesWeeklyReportRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +179,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  TemplatesBudgetPlannerRoute: TemplatesBudgetPlannerRoute,
+  TemplatesContentCalendarRoute: TemplatesContentCalendarRoute,
+  TemplatesCplCpaRoute: TemplatesCplCpaRoute,
   TemplatesRnpRoute: TemplatesRnpRoute,
+  TemplatesWeeklyReportRoute: TemplatesWeeklyReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

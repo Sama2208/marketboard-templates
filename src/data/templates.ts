@@ -4,7 +4,12 @@ export type TemplateItem = {
   description: string;
   tag: string;
   active: boolean;
-  to?: "/templates/rnp";
+  to?:
+    | "/templates/rnp"
+    | "/templates/cpl-cpa"
+    | "/templates/budget-planner"
+    | "/templates/weekly-report"
+    | "/templates/content-calendar";
 };
 
 export const templates: TemplateItem[] = [
@@ -21,27 +26,31 @@ export const templates: TemplateItem[] = [
     title: "CPL / CPA Kalkulyator",
     description: "Lead va sotuv narxini tez hisoblash va solishtirish",
     tag: "Kalkulyator",
-    active: false,
+    active: true,
+    to: "/templates/cpl-cpa",
   },
   {
     slug: "budget-planner",
     title: "Budjet Planner",
     description: "Kanallar bo'yicha oylik reklama budjetini taqsimlash",
     tag: "Planlash",
-    active: false,
+    active: true,
+    to: "/templates/budget-planner",
   },
   {
     slug: "weekly-report",
     title: "Haftalik Hisobot",
     description: "Mijoz uchun haftalik natijalar hisobotini tayyorlash",
     tag: "Hisobot",
-    active: false,
+    active: true,
+    to: "/templates/weekly-report",
   },
   {
     slug: "content-calendar",
     title: "Kontent Kalendar",
     description: "Kontent rejasini oylik kalendar ko'rinishida boshqarish",
     tag: "Kontent",
-    active: false,
+    active: true,
+    to: "/templates/content-calendar",
   },
 ];
