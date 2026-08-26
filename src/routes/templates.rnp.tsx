@@ -12,15 +12,20 @@ import {
   type Client,
 } from "@/lib/supabase/clients";
 import { deleteMonthRemote, loadMonthRemote, saveMonthRemote } from "@/lib/supabase/rnpStore";
+import { deleteSalesRemote, loadSalesRemote, saveSalesRemote } from "@/lib/supabase/salesStore";
 import { ClientBar } from "@/components/marketboard/ClientBar";
 import { DailyTable } from "@/components/marketboard/DailyTable";
 import { ExportBar } from "@/components/marketboard/ExportBar";
+import { HulosalarPanel } from "@/components/marketboard/HulosalarPanel";
 import { PlanPanel } from "@/components/marketboard/PlanPanel";
 import { RnpCharts } from "@/components/marketboard/RnpCharts";
+import { SalesOperators } from "@/components/marketboard/SalesOperators";
 import { StatCard } from "@/components/marketboard/StatCard";
 import { BrandMark } from "@/components/marketboard/BrandMark";
+import { computeHulosalar } from "@/lib/hulosalar";
 import type { DayRow, MonthData, PlanSettings } from "@/lib/rnp";
 import { createMonthData, fmt, monthNames, planFunnel, totals } from "@/lib/rnp";
+import { createOperator, emptySalesData, type SalesData, type SalesOperator } from "@/lib/sales";
 
 export const Route = createFileRoute("/templates/rnp")({
   ssr: false,
@@ -84,6 +89,10 @@ function RnpPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [salesData, setSalesData] = useState<SalesData>(emptySalesData);
+  const [loadingSales, setLoadingSales] = useState(true);
+  const [savingSales, setSavingSales] = useState(false);
+  const salesSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initRef = useRef(false);
 
   // Mijozlarni yuklash (bo'sh bo'lsa — birinchisini avtomatik yaratish).
@@ -123,6 +132,27 @@ function RnpPage() {
         if (active) setData(createMonthData(year, month));
       } finally {
         if (active) setLoadingData(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [clientId, year, month]);
+
+  // Tanlangan mijoz + oy uchun operatorlar ma'lumotini bazadan yuklash
+  useEffect(() => {
+    if (!clientId) return;
+    let active = true;
+    setLoadingSales(true);
+    (async () => {
+      try {
+        const remote = await loadSalesRemote(clientId, year, month);
+        if (active) setSalesData(remote);
+      } catch (e) {
+        console.error("Operatorlar ma'lumotini yuklashda xatolik", e);
+        if (active) setSalesData(emptySalesData);
+      } finally {
+        if (active) setLoadingSales(false);
       }
     })();
     return () => {
@@ -204,6 +234,93 @@ function RnpPage() {
     [scheduleSave],
   );
 
+  const scheduleSalesSave = useCallback(
+    (next: SalesData) => {
+      if (!clientId) return;
+      const cid = clientId;
+      const y = year;
+      const m = month;
+      if (salesSaveTimer.current) clearTimeout(salesSaveTimer.current);
+      setSavingSales(true);
+      salesSaveTimer.current = setTimeout(async () => {
+        try {
+          await saveSalesRemote(cid, y, m, next);
+        } catch (e) {
+          console.error("Operatorlar ma'lumotini saqlashda xatolik", e);
+        } finally {
+          setSavingSales(false);
+        }
+      }, 700);
+    },
+    [clientId, month, year],
+  );
+
+  const onChangeSales = useCallback(
+    (id: string, patch: Partial<SalesOperator>) => {
+      setSalesData((prev) => {
+        const next = {
+          operators: prev.operators.map((operator) =>
+            operator.id === id ? { ...operator, ...patch } : operator,
+          ),
+        };
+        scheduleSalesSave(next);
+        return next;
+      });
+    },
+    [scheduleSalesSave],
+  );
+
+  const onAddOperator = useCallback(() => {
+    if (!isPro) return;
+    setSalesData((prev) => {
+      const next = {
+        operators: [...prev.operators, createOperator(prev.operators.length + 1)],
+      };
+      scheduleSalesSave(next);
+      return next;
+    });
+  }, [isPro, scheduleSalesSave]);
+
+  const onDeleteOperator = useCallback(
+    (id: string) => {
+      const operator = salesData.operators.find((item) => item.id === id);
+      if (!operator) return;
+      if (!window.confirm(`"${operator.operatorName}" operatorini o'chirasizmi?`)) return;
+      setSalesData((prev) => {
+        const next = { operators: prev.operators.filter((item) => item.id !== id) };
+        scheduleSalesSave(next);
+        return next;
+      });
+    },
+    [salesData.operators, scheduleSalesSave],
+  );
+
+  const onClearSales = useCallback(async () => {
+    if (!clientId || loadingSales || salesData.operators.length === 0) return;
+    const clientName = clients.find((client) => client.id === clientId)?.name ?? "mijoz";
+    if (
+      !window.confirm(
+        `"${clientName}" mijozining ${monthNames[month]} ${year} oyidagi barcha operator va sotuv ma'lumotlarini o'chirasizmi?`,
+      )
+    )
+      return;
+
+    if (salesSaveTimer.current) {
+      clearTimeout(salesSaveTimer.current);
+      salesSaveTimer.current = null;
+    }
+    setSavingSales(true);
+    try {
+      await deleteSalesRemote(clientId, year, month);
+      setSalesData(emptySalesData);
+    } catch (e) {
+      console.error("Sotuv ma'lumotlarini o'chirishda xatolik", e);
+      window.alert("Sotuv ma'lumotlari o'chirilmadi. Qayta urinib ko'ring.");
+    } finally {
+      setSavingSales(false);
+    }
+  }, [clientId, clients, loadingSales, month, salesData.operators.length, year]);
+
   // Mijoz amallari
   const onAddClient = async () => {
     if (!isPro && clients.length >= 1) {
@@ -260,7 +377,10 @@ function RnpPage() {
       const rest = clients.filter((c) => c.id !== clientId);
       setClients(rest);
       setClientId(rest[0]?.id ?? null);
-      if (rest.length === 0) setData(createMonthData(year, month));
+      if (rest.length === 0) {
+        setData(createMonthData(year, month));
+        setSalesData(emptySalesData);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -272,6 +392,8 @@ function RnpPage() {
   const pf = planFunnel(data.plan);
   const showLoader = !clientsReady;
   const selectedClientName = clients.find((client) => client.id === clientId)?.name ?? "Mijoz";
+  const dataBusy = loadingData || loadingSales;
+  const hulosalar = computeHulosalar(data, salesData, data.plan);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -291,7 +413,7 @@ function RnpPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {saving ? (
+            {saving || savingSales ? (
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saqlanmoqda…
               </span>
@@ -356,16 +478,28 @@ function RnpPage() {
             tugmasi bilan qo'shing.
           </div>
         ) : (
-          <div className={loadingData ? "pointer-events-none opacity-60" : ""}>
+          <div className={dataBusy ? "pointer-events-none opacity-60" : ""}>
             <ExportBar
               data={data}
               clientName={selectedClientName}
               year={year}
               month={month}
-              disabled={loadingData || saving}
+              disabled={dataBusy || saving || savingSales}
               isPro={isPro}
               onClear={onClearMonth}
             />
+            <div className="mt-5">
+              <SalesOperators
+                data={salesData}
+                rnpLeadTotal={t.lead}
+                isPro={isPro}
+                disabled={dataBusy || saving || savingSales}
+                onAdd={onAddOperator}
+                onChange={onChangeSales}
+                onDelete={onDeleteOperator}
+                onClear={onClearSales}
+              />
+            </div>
             <PlanPanel plan={data.plan} onChange={onChangePlan} />
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -402,6 +536,10 @@ function RnpPage() {
 
             <div className="mt-5">
               <DailyTable data={data} onChangeRow={onChangeRow} />
+            </div>
+
+            <div className="mt-5">
+              <HulosalarPanel result={hulosalar} />
             </div>
           </div>
         )}
